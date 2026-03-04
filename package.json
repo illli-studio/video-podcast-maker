@@ -8,14 +8,17 @@
   },
   "scripts": {
     "start": "node ./bin/cli.js",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "echo \"No linter configured\""
   },
   "dependencies": {
     "commander": "^11.1.0",
     "inquirer": "^9.2.12"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0"
+    "@types/node": "^20.10.0",
+    "vitest": "^1.6.1"
   },
   "engines": {
     "node": ">=18.0.0"

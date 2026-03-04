@@ -1,249 +1,168 @@
-# Video Podcast Maker
+# Video Podcast Maker 🎙️
 
-[中文文档](README_CN.md)
+Automated pipeline to create professional video podcasts from a topic. **Optimized for Bilibili (B站)**.
 
-Automated pipeline to create professional video podcasts from a topic. **Optimized for Bilibili (B站)**. Combines research, script generation, Microsoft Azure TTS, Remotion video rendering, and FFmpeg audio mixing.
-
-> **No coding required!** Just describe your topic in plain language - Claude guides you through each step interactively. You make creative decisions, Claude handles all the technical details. Creating your first video podcast is easier than you think.
-
-> **Note:** This project is still under active development and may not be fully mature yet. We are continuously iterating and improving. Your feedback and suggestions are greatly appreciated — feel free to [open an issue](https://github.com/Agents365-ai/video-podcast-maker/issues) or reach out!
+[English](README.md) | [中文](README_CN.md)
 
 ## Features
 
-- **Topic Research** - Web search and content gathering
-- **Script Writing** - Structured narration with section markers
-- **Multi-TTS** - Azure Speech or CosyVoice (Alibaba Cloud) text-to-speech
-- **Remotion Video** - React-based video composition with animations
-- **Visual Style Editing** - Adjust colors, fonts, and layout in Remotion Studio UI
-- **Real-time Preview** - Remotion Studio for instant debugging before render
-- **Auto Timing** - Audio-video sync via `timing.json`
-- **BGM Mixing** - Background music overlay with FFmpeg
-- **Subtitle Burning** - Optional SRT subtitle embedding
-- **4K Output** - 3840x2160 resolution for crisp uploads
-- **Chapter Progress Bar** - Visual timeline showing current section during playback
-- **Bilingual TTS** - Chinese/English mixed narration with Azure Speech or CosyVoice
-- **Pronunciation Correction** - Built-in polyphone dictionary + custom phoneme support
-- **Bilibili Templates** - Ready-to-use Remotion templates (`Video.tsx`, `Root.tsx`, `Thumbnail.tsx`, `podcast.txt`) for quick project scaffolding
-- **Component Library** - Reusable visual building blocks (ComparisonCard, Timeline, CodeBlock, QuoteBlock, FeatureGrid, DataBar) for composing rich section layouts
+- **14 步全自动工作流** - 从话题到 4K 视频
+- **MiniMax LLM 集成** - 智能研究和脚本生成
+- **Remotion Studio** - 可视化预览和编辑
+- **多 TTS 提供商** - Azure Speech / CosyVoice
+- **B站深度优化** - 章节时间戳、双比例封面
+- **4K 输出** + 背景音乐混音
 
-### Bilibili Optimizations
+## 快速开始
 
-- **Script Structure** - Welcome intro + call-to-action outro (一键三连)
-- **Chapter Timestamps** - Auto-generated `MM:SS` format for B站 chapters
-- **Thumbnail Generation** - AI (imagen/imagenty) or Remotion, auto-generates 16:9 + 4:3 versions
-- **Visual Style** - Bold text, minimal whitespace, high information density
-- **Publish Info** - Title formulas, tag strategies, description templates
-
-## Workflow
-
-![Workflow](assets/workflow.png)
-
-## Related Skills
-
-This skill depends on **remotion-best-practices** and works alongside other optional skills:
-
-- **remotion-best-practices** - Official Remotion best practices (required, provides core Remotion patterns and guidelines)
-- **find-skills** - Official skill discovery tool (required, helps find and install additional skills)
-- **ffmpeg** - Advanced audio/video processing (optional)
-- **imagen / imagenty** - AI thumbnail generation (optional)
-
-
-## Requirements
-
-### System Requirements
-
-| Software | Version | Purpose |
-|----------|---------|---------|
-| **macOS / Linux** | - | Tested on macOS, Linux compatible |
-| **Python** | 3.8+ | TTS script, automation |
-| **Node.js** | 18+ | Remotion video rendering |
-| **FFmpeg** | 4.0+ | Audio/video processing |
-
-### Installation
+### 安装
 
 ```bash
-# macOS
-brew install ffmpeg node python3
+# Clone 项目
+git clone https://github.com/illli-studio/video-podcast-maker.git
+cd video-podcast-maker
 
-# Ubuntu/Debian
-sudo apt install ffmpeg nodejs python3 python3-pip
+# 安装依赖
+npm install
 
-# Python dependencies
-pip install azure-cognitiveservices-speech dashscope requests
+# 链接到全局
+npm link
 ```
 
-### Project Setup (Required)
-
-> **Important:** This skill requires a Remotion project as the foundation.
-
-**Understanding the components:**
-
-| Component | Source | Purpose |
-|-----------|--------|---------|
-| **Remotion Project** | `npx create-video` | Base framework with `src/`, `public/`, `package.json` |
-| **video-podcast-maker** | Claude Code skill | Workflow orchestration (this skill) |
+### 配置
 
 ```bash
-# Step 1: Create a new Remotion project (base framework)
-npx create-video@latest my-video-project
-cd my-video-project
-npm i  # Install Remotion dependencies
-
-# Step 2: Verify installation
-npx remotion studio  # Should open browser preview
+video-podcast-maker config
+# 选择 "Set Azure API key" 或 "Set CosyVoice API key"
 ```
 
-If you already have a Remotion project:
+或者设置环境变量：
 
 ```bash
-cd your-existing-project
-npm install remotion @remotion/cli @remotion/player zod
+export AZURE_SPEECH_KEY=your_key
+export AZURE_SPEECH_REGION=eastus
+export MINIMAX_API_KEY=your_minimax_key
 ```
 
-### API Keys Required
-
-| Service | Purpose | Get Key |
-|---------|---------|---------|
-| **Azure Speech** | TTS audio generation (default backend) | [Azure Portal](https://portal.azure.com/) → Speech Services |
-| **Aliyun CosyVoice** | TTS audio generation (alternative backend) | [Aliyun Bailian](https://bailian.console.aliyun.com/) |
-| **Google Gemini** | AI thumbnail generation (optional) | [AI Studio](https://aistudio.google.com/) |
-| **Aliyun Dashscope** | AI thumbnail - Chinese optimized (optional) | [Aliyun Bailian](https://bailian.console.aliyun.com/) |
-
-### Environment Variables
-
-Add to `~/.zshrc` or `~/.bashrc`:
+### 使用
 
 ```bash
-# TTS Backend: Azure (default) or CosyVoice
-export AZURE_SPEECH_KEY="your-azure-speech-key"     # Required for Azure TTS
-export AZURE_SPEECH_REGION="eastasia"
-export DASHSCOPE_API_KEY="your-dashscope-api-key"    # Required for CosyVoice TTS + AI thumbnails
-export TTS_BACKEND="azure"                           # Or "cosyvoice"
+# 1. 初始化项目
+video-podcast-maker init my-video
+cd my-video
 
-# Optional: Google Gemini for AI thumbnails
-export GEMINI_API_KEY="your-gemini-api-key"
+# 2. 运行工作流 (自动研究 + 生成脚本)
+video-podcast-maker workflow
+
+# 3. 生成配音
+video-podcast-maker tts
+
+# 4. 预览视频
+video-podcast-maker preview
+
+# 5. 渲染最终视频
+video-podcast-maker render
 ```
 
-Then reload: `source ~/.zshrc`
+## 命令列表
 
-## Quick Start
+| 命令 | 简写 | 功能 |
+|------|------|------|
+| `init [name]` | `i` | 初始化新项目 |
+| `workflow` | `w` | 运行完整工作流 |
+| `tts` | `t` | 生成配音 |
+| `preview` | `p` | 浏览器预览 |
+| `render` | `r` | 渲染视频 |
+| `config` | `c` | 配置管理 |
 
-### Usage
+## 工作流
 
-This skill is designed for use with [Claude Code](https://claude.ai/claude-code) or [Opencode](https://github.com/opencode-ai/opencode). Simply tell Claude:
+```
+用户输入主题
+     ↓
+🔍 主题研究 (MiniMax)
+     ↓
+✍️ 生成脚本 (MiniMax)
+     ↓
+🎙️ TTS 配音生成
+     ↓
+🎬 Remotion 视频渲染
+     ↓
+📺 4K 视频输出
+```
 
-> "Create a video podcast about [your topic]"
+## 项目结构
 
-Claude will guide you through the entire workflow automatically.
+```
+video-podcast-maker/
+├── bin/
+│   └── cli.js              # CLI 入口
+├── src/
+│   ├── commands/
+│   │   ├── init.js        # 初始化
+│   │   ├── workflow.js    # 工作流
+│   │   ├── tts.js        # 配音
+│   │   ├── preview.js    # 预览
+│   │   ├── render.js     # 渲染
+│   │   └── config.js     # 配置
+│   └── lib/
+│       ├── workflow.js    # 工作流核心 (含 MiniMax 集成)
+│       └── tts.js        # TTS 核心
+├── templates/            # 视频模板
+├── generate_tts.py      # Python TTS 脚本
+└── package.json
+```
 
-### Preview & Visual Editing with Remotion Studio
+## 配置选项
 
-Before rendering the final video, use Remotion Studio to preview and visually edit styles:
+### Azure Speech
 
 ```bash
-npx remotion studio src/remotion/index.ts
+video-podcast-maker config
+# → Set Azure API key
 ```
 
-This opens a browser-based editor where you can:
-- **Visual Style Editing** - Adjust colors, fonts, and sizes in the right panel
-- Scrub through the timeline frame-by-frame
-- See live updates as you edit components
-- Debug timing and animations instantly
+### CosyVoice (阿里云)
 
-#### Editable Properties
-
-| Category | Properties |
-|----------|-----------|
-| **Colors** | Primary color, background, text color, accent |
-| **Typography** | Title size (72-120), subtitle size, body size |
-| **Progress Bar** | Show/hide, height, font size, active color |
-| **Audio** | BGM volume (0-0.3) |
-| **Animation** | Enable/disable entrance animations |
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  Remotion Studio                                                │
-├──────────────────────────────────┬──────────────────────────────┤
-│                                  │  Props Panel                 │
-│                                  │  ─────────────────────────── │
-│     Video Preview                │  primaryColor    [#4f6ef7]   │
-│     (Real-time)                  │  backgroundColor [#ffffff]   │
-│                                  │  titleSize       [====80===] │
-│     ┌─────────────────────┐      │  showProgressBar [✓]         │
-│     │   Your Video Here   │      │  progressBarHeight [==130==] │
-│     │                     │      │  bgmVolume       [=0.05====] │
-│     └─────────────────────┘      │  enableAnimations [✓]        │
-│                                  │                              │
-│  ◀──────────●──────────────▶     │  [Render Video]              │
-│  Timeline                        │                              │
-└──────────────────────────────────┴──────────────────────────────┘
+```bash
+video-podcast-maker config
+# → Set CosyVoice API key
 ```
 
-## Output Structure
+### MiniMax (用于脚本生成)
 
-```
-videos/{video-name}/
-├── topic_definition.md      # Topic direction
-├── topic_research.md        # Research notes
-├── podcast.txt              # Narration script
-├── podcast_audio.wav        # TTS audio
-├── podcast_audio.srt        # Subtitles
-├── timing.json              # Section timing for sync
-├── thumbnail_*.png          # Video thumbnails
-├── publish_info.md          # Title, tags, description
-├── part_*.wav               # TTS segments (temp, cleanup via Step 14)
-├── output.mp4               # Raw render (temp)
-├── video_with_bgm.mp4       # With BGM (temp)
-└── final_video.mp4          # Final output
+设置环境变量：
+
+```bash
+export MINIMAX_API_KEY=your_key
 ```
 
-## Background Music
+## B站优化
 
-Included tracks in `assets/`:
-- `perfect-beauty-191271.mp3` - Upbeat, positive
-- `snow-stevekaldes-piano-397491.mp3` - Calm piano
+- 封面自动生成 (16:9 + 4:3)
+- 章节时间戳 (`MM:SS` 格式)
+- 一键三连引导
+- 高信息密度布局
 
-## Roadmap
+## 开发
 
-- [ ] Vertical video support (9:16) for Bilibili mobile-first content
-- [ ] Figma integration for thumbnails, icons, and layout design assets
-- [x] Remotion transitions (@remotion/transitions) for professional chapter transitions
-- [x] Component template library (ComparisonCard, Timeline, CodeBlock, QuoteBlock, FeatureGrid, DataBar)
-- [x] Multi TTS engine support (Azure Speech + CosyVoice via `TTS_BACKEND` env var)
-- [ ] Additional TTS engines (ElevenLabs, Edge TTS)
-- [ ] Windows compatibility (WSL or native PowerShell support)
+```bash
+# 运行测试
+npm test
+
+# 开发模式
+npm run test:watch
+```
+
+## 技术栈
+
+- **Node.js 18+** - CLI
+- **Python 3.8+** - TTS
+- **MiniMax API** - LLM 脚本生成
+- **Remotion** - 视频渲染
+- **FFmpeg** - 音频处理
+- **Azure Speech / CosyVoice** - 语音合成
 
 ## License
 
-MIT
-
-## Support
-
-If this project helps you, consider supporting the author:
-
-<table>
-  <tr>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/Agents365-ai/images_payment/main/qrcode/wechat-pay.png" width="180" alt="WeChat Pay">
-      <br>
-      <b>WeChat Pay</b>
-    </td>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/Agents365-ai/images_payment/main/qrcode/alipay.png" width="180" alt="Alipay">
-      <br>
-      <b>Alipay</b>
-    </td>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/Agents365-ai/images_payment/main/qrcode/buymeacoffee.png" width="180" alt="Buy Me a Coffee">
-      <br>
-      <b>Buy Me a Coffee</b>
-    </td>
-  </tr>
-</table>
-
-## Author
-
-**Agents365-ai**
-
-- Bilibili: https://space.bilibili.com/441831884
-- GitHub: https://github.com/Agents365-ai
+MIT © illli-studio

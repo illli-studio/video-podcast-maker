@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import workflow from '../src/commands/workflow.js';
 import tts from '../src/commands/tts.js';
 import render from '../src/commands/render.js';
+import preview from '../src/commands/preview.js';
 import init from '../src/commands/init.js';
 import config from '../src/commands/config.js';
 
@@ -18,6 +19,7 @@ program.addCommand(init);
 program.addCommand(workflow);
 program.addCommand(tts);
 program.addCommand(render);
+program.addCommand(preview);
 program.addCommand(config);
 
 program.parse();
