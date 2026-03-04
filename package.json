@@ -2,22 +2,36 @@
   "name": "video-podcast-maker",
   "version": "1.0.0",
   "description": "Automated pipeline to create professional video podcasts from a topic",
+  "type": "module",
+  "bin": {
+    "video-podcast-maker": "./bin/cli.js"
+  },
   "scripts": {
-    "studio": "remotion studio src/remotion/index.ts",
-    "render": "remotion render src/remotion/index.ts",
-    "build": "remotion bundle src/remotion/index.ts"
+    "start": "node ./bin/cli.js",
+    "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "remotion": "^4.0.0",
-    "@remotion/cli": "^4.0.0",
-    "@remotion/player": "^4.0.0",
-    "@remotion/transitions": "^4.0.0",
-    "zod": "^3.22.0"
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.12"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "typescript": "^5.3.0"
-  }
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "video",
+    "podcast",
+    "tts",
+    "remotion",
+    "automation",
+    "bilibili"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/illli-studio/video-podcast-maker"
+  },
+  "author": "illli-studio",
+  "license": "MIT"
 }

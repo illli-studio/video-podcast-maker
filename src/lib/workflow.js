@@ -1,11 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * Research a topic using web search
+ * Research a topic using web search (placeholder - integrate with actual search)
  */
 export async function researchTopic(topic) {
   // This would integrate with web search in actual usage
@@ -14,35 +11,47 @@ export async function researchTopic(topic) {
     topic,
     summary: `Research on: ${topic}`,
     keyPoints: [
-      'Key point 1',
-      'Key point 2',
-      'Key point 3'
+      'Key point 1 about ' + topic,
+      'Key point 2 about ' + topic,
+      'Key point 3 about ' + topic
     ],
     sources: []
   };
 }
 
 /**
- * Generate a video script from research
+ * Generate a video script from research (placeholder - integrate with LLM)
  */
 export async function generateScript(topic, research) {
   // This would use LLM in actual usage
+  const totalDuration = 70;
+  
   return {
     title: topic,
     sections: [
       {
         id: 'intro',
         title: 'Introduction',
-        content: `Welcome! Today we're going to talk about ${topic}.`,
+        content: `Welcome! Today we're going to talk about ${topic}. ${research.summary}`,
         duration: 5
       },
       {
-        id: 'main',
-        title: 'Main Content',
-        content: research.keyPoints.map((point, i) => 
-          `First, ${point.toLowerCase()}.`
-        ).join(' '),
-        duration: 60
+        id: 'main-1',
+        title: research.keyPoints[0] || 'Main Content',
+        content: research.keyPoints[0] ? `Let's start with ${research.keyPoints[0].toLowerCase()}.` : 'Here is the main content.',
+        duration: 20
+      },
+      {
+        id: 'main-2',
+        title: research.keyPoints[1] || 'Details',
+        content: research.keyPoints[1] ? `Next, ${research.keyPoints[1].toLowerCase()}.` : 'Here are some details.',
+        duration: 20
+      },
+      {
+        id: 'main-3',
+        title: research.keyPoints[2] || 'Summary',
+        content: research.keyPoints[2] ? `Finally, ${research.keyPoints[2].toLowerCase()}.` : 'Let me summarize.',
+        duration: 20
       },
       {
         id: 'outro',
@@ -51,7 +60,7 @@ export async function generateScript(topic, research) {
         duration: 5
       }
     ],
-    totalDuration: 70,
+    totalDuration,
     createdAt: new Date().toISOString()
   };
 }

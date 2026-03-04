@@ -3,6 +3,10 @@ import inquirer from 'inquirer';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const init = new Command('init')
   .description('Initialize a new video podcast project');
@@ -26,15 +30,16 @@ init
     try {
       execSync('npx create-video@latest . --template blank', {
         stdio: 'inherit',
-        cwd: projectPath
+        cwd: projectPath,
+        timeout: 120000
       });
     } catch (e) {
       console.log('Manual setup required...');
     }
     
-    // Copy templates
-    const cliPath = path.dirname(path.dirname(path.dirname(import.meta.url pathname)));
-    const templatesSrc = path.join(cliPath, 'templates');
+    // Copy templates from skill
+    const skillRoot = path.resolve(__dirname, '../..');
+    const templatesSrc = path.join(skillRoot, 'templates');
     
     if (fs.existsSync(templatesSrc)) {
       const srcDir = path.join(projectPath, 'src');
@@ -46,24 +51,29 @@ init
       const videoSrc = path.join(templatesSrc, 'Video.tsx');
       if (fs.existsSync(videoSrc)) {
         fs.copyFileSync(videoSrc, path.join(srcDir, 'Video.tsx'));
+        console.log('✅ Copied Video.tsx');
       }
       
       // Copy Root.tsx
       const rootSrc = path.join(templatesSrc, 'Root.tsx');
       if (fs.existsSync(rootSrc)) {
         fs.copyFileSync(rootSrc, path.join(srcDir, 'Root.tsx'));
+        console.log('✅ Copied Root.tsx');
       }
       
       // Copy Thumbnail.tsx
       const thumbSrc = path.join(templatesSrc, 'Thumbnail.tsx');
       if (fs.existsSync(thumbSrc)) {
         fs.copyFileSync(thumbSrc, path.join(srcDir, 'Thumbnail.tsx'));
+        console.log('✅ Copied Thumbnail.tsx');
       }
     }
     
     console.log(`\n✅ Project initialized: ${projectPath}`);
     console.log('\n📝 Next steps:');
     console.log(`  cd ${name}`);
+    console.log('  npm install');
+    console.log('  video-podcast-maker config');
     console.log('  video-podcast-maker workflow');
   });
 

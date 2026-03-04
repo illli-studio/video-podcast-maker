@@ -4,7 +4,7 @@ import { execSync } from 'child_process';
 import os from 'os';
 
 /**
- * Generate TTS audio files
+ * Generate TTS audio files using Python script
  */
 export async function generateTTS(script, provider = 'azure') {
   const outputDir = path.resolve('./output/audio');
@@ -23,7 +23,7 @@ export async function generateTTS(script, provider = 'azure') {
     // Call Python TTS script
     try {
       const pythonScript = path.join(
-        path.dirname(path.dirname(path.dirname(import.meta.url pathname))), 
+        path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url)))), 
         'generate_tts.py'
       );
       
@@ -32,7 +32,7 @@ export async function generateTTS(script, provider = 'azure') {
       
       audioFiles.push(audioPath);
     } catch (e) {
-      console.warn(`Warning: TTS generation failed for ${section.title}, using placeholder`);
+      console.warn(`⚠️ TTS generation failed for ${section.title}, using placeholder`);
       // Create empty placeholder
       fs.writeFileSync(audioPath, Buffer.alloc(0));
       audioFiles.push(audioPath);
@@ -56,6 +56,10 @@ export async function generateTTS(script, provider = 'azure') {
   );
   
   return audioFiles;
+}
+
+function fileURLToPath(url) {
+  return url.replace('file://', '');
 }
 
 /**

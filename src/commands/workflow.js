@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import { researchTopic, generateScript } from '../lib/workflow.js';
+import { researchTopic, generateScript, ensureOutputDirs } from '../lib/workflow.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -10,6 +10,8 @@ const workflow = new Command('workflow')
 workflow
   .action(async () => {
     console.log('🎬 Video Podcast Maker - Workflow\n');
+    
+    ensureOutputDirs();
     
     // Step 1: Get topic
     const { topic } = await inquirer.prompt([
@@ -24,17 +26,15 @@ workflow
     // Step 2: Research
     console.log('\n📚 Step 1: Researching topic...');
     const research = await researchTopic(topic);
+    console.log('✅ Research complete');
     
     // Step 3: Generate script
     console.log('\n✍️ Step 2: Generating script...');
     const script = await generateScript(topic, research);
+    console.log('✅ Script generated');
     
     // Step 4: Save script
     const outputDir = './output';
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-    
     const scriptPath = path.join(outputDir, 'script.json');
     fs.writeFileSync(scriptPath, JSON.stringify(script, null, 2));
     
