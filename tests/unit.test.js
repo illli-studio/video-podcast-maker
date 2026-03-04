@@ -67,6 +67,32 @@ describe('Workflow Module', () => {
       const result = validateScript(script);
       expect(result.valid).toBe(false);
     });
+    
+    it('should validate empty sections as valid structure', () => {
+      const script = {
+        title: 'Test',
+        sections: []
+      };
+      
+      // Empty sections array is structurally valid
+      const result = validateScript(script);
+      expect(result.valid).toBe(true);
+    });
+    
+    it('should validate multiple sections correctly', () => {
+      const script = {
+        title: 'Multi-section Video',
+        sections: [
+          { id: 'intro', title: 'Start', content: 'Hello', duration: 5 },
+          { id: 'point1', title: 'Point 1', content: 'First point', duration: 30 },
+          { id: 'point2', title: 'Point 2', content: 'Second point', duration: 30 },
+          { id: 'outro', title: 'End', content: 'Goodbye', duration: 5 }
+        ]
+      };
+      
+      const result = validateScript(script);
+      expect(result.valid).toBe(true);
+    });
   });
   
   describe('getProjectRoot', () => {
@@ -97,6 +123,11 @@ describe('Workflow Module', () => {
       const config = loadConfig();
       expect(config).toHaveProperty('azureSpeechRegion');
     });
+    
+    it('should include minimaxApiKey property', () => {
+      const config = loadConfig();
+      expect(config).toHaveProperty('minimaxApiKey');
+    });
   });
   
   describe('saveConfig', () => {
@@ -122,6 +153,37 @@ describe('TTS Module', () => {
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
+    
+    it('should fail for directory with no wav files', () => {
+      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-tts-'));
+      const result = validateTTSOutput(tempDir);
+      expect(result.valid).toBe(false);
+      expect(result.errors[0]).toContain('No audio files found');
+      fs.rmSync(tempDir, { recursive: true });
+    });
+    
+    it('should detect empty audio files as invalid', () => {
+      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-tts-'));
+      const emptyFile = path.join(tempDir, 'empty.wav');
+      fs.writeFileSync(emptyFile, Buffer.alloc(0));
+      
+      const result = validateTTSOutput(tempDir);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('Empty audio file'))).toBe(true);
+      fs.rmSync(tempDir, { recursive: true });
+    });
+    
+    it('should validate non-empty audio files', () => {
+      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-tts-'));
+      const validFile = path.join(tempDir, 'valid.wav');
+      fs.writeFileSync(validFile, Buffer.alloc(1000)); // 1KB
+      
+      const result = validateTTSOutput(tempDir);
+      expect(result.valid).toBe(true);
+      expect(result.files.length).toBe(1);
+      expect(result.files[0].valid).toBe(true);
+      fs.rmSync(tempDir, { recursive: true });
+    });
   });
   
   describe('getProviders', () => {
@@ -136,14 +198,39 @@ describe('TTS Module', () => {
       expect(providers.azure.name).toBe('Azure Speech');
       expect(providers.cosyvoice.name).toBe('CosyVoice');
     });
+    
+    it('should have default voices', () => {
+      const providers = getProviders();
+      expect(providers.azure.defaultVoice).toBeDefined();
+      expect(providers.cosyvoice.defaultVoice).toBeDefined();
+    });
+    
+    it('should have all required provider properties', () => {
+      const providers = getProviders();
+      expect(providers.azure).toHaveProperty('name');
+      expect(providers.azure).toHaveProperty('defaultVoice');
+      expect(providers.cosyvoice).toHaveProperty('name');
+      expect(providers.cosyvoice).toHaveProperty('defaultVoice');
+    });
   });
   
   describe('checkTTSConfig', () => {
-    it('should return config status', () => {
+    it('should return config status for azure', () => {
       const result = checkTTSConfig('azure');
-      expect(result).toHaveProperty('provider');
-      expect(result).toHaveProperty('configured');
-      expect(result).toHaveProperty('message');
+      expect(result.provider).toBe('azure');
+      expect(result.configured).toBeDefined();
+      expect(typeof result.configured).toBe('boolean');
+    });
+    
+    it('should return config status for cosyvoice', () => {
+      const result = checkTTSConfig('cosyvoice');
+      expect(result.provider).toBe('cosyvoice');
+      expect(result.configured).toBeDefined();
+    });
+    
+    it('should return correct message format', () => {
+      const result = checkTTSConfig('azure');
+      expect(result.message).toContain('Azure');
     });
   });
 });
