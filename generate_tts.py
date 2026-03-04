@@ -319,61 +319,67 @@ def mark_english_terms(text):
     return result
 
 
-# TTS 合成
-config = speechsdk.SpeechConfig(subscription=key, region=region)
-config.SpeechSynthesisVoiceName = "zh-CN-XiaoxiaoMultilingualNeural"
-part_files = []
-word_boundaries = []
-accumulated_duration = 0
+def synth_azure(chunks, phoneme_dict, speech_rate, output_dir):
+    import azure.cognitiveservices.speech as speechsdk
 
-for i, chunk in enumerate(chunks):
-    part_file = os.path.join(args.output_dir, f"part_{i}.wav")
-    part_files.append(part_file)
-    audio = speechsdk.audio.AudioOutputConfig(filename=part_file)
-    synth = speechsdk.SpeechSynthesizer(speech_config=config, audio_config=audio)
+    config = speechsdk.SpeechConfig(subscription=key, region=region)
+    config.SpeechSynthesisVoiceName = "zh-CN-XiaoxiaoMultilingualNeural"
+    part_files = []
+    word_boundaries = []
+    accumulated_duration = 0
 
-    def word_boundary_cb(evt):
-        word_boundaries.append({
-            "text": evt.text,
-            "offset": accumulated_duration + evt.audio_offset / 10000000.0,
-            "duration": evt.duration.total_seconds(),
-        })
-    synth.synthesis_word_boundary.connect(word_boundary_cb)
+    for i, chunk in enumerate(chunks):
+        part_file = os.path.join(output_dir, f"part_{i}.wav")
+        part_files.append(part_file)
+        audio = speechsdk.audio.AudioOutputConfig(filename=part_file)
+        synth = speechsdk.SpeechSynthesizer(speech_config=config, audio_config=audio)
 
-    # 先处理多音字（在原始文本上），再处理英文标记
-    # apply_phonemes works on raw text and adds phoneme tags
-    chunk_with_phonemes = apply_phonemes(chunk, phoneme_dict)
-    # mark_english_terms escapes special chars and adds lang tags
-    processed = mark_english_terms(chunk_with_phonemes)
+        def word_boundary_cb(evt):
+            word_boundaries.append({
+                "text": evt.text,
+                "offset": accumulated_duration + evt.audio_offset / 10000000.0,
+                "duration": evt.duration.total_seconds(),
+            })
+        synth.synthesis_word_boundary.connect(word_boundary_cb)
 
-    ssml = f"""<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
-               xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-CN">
-        <voice name="zh-CN-XiaoxiaoMultilingualNeural">
-            <mstts:express-as style="gentle">
-                <prosody rate="{SPEECH_RATE}">{processed}</prosody>
-            </mstts:express-as>
-        </voice>
-    </speak>"""
+        chunk_with_phonemes = apply_phonemes(chunk, phoneme_dict)
+        processed = mark_english_terms(chunk_with_phonemes)
 
-    success = False
-    for attempt in range(1, 4):
-        result = synth.speak_ssml_async(ssml).get()
-        if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-            chunk_duration = result.audio_duration.total_seconds()
-            print(f"  ✓ Part {i + 1}/{len(chunks)} 完成 ({len(chunk)} 字, {chunk_duration:.1f}s)")
-            accumulated_duration += chunk_duration
-            success = True
-            break
-        else:
-            details = result.cancellation_details.error_details
-            print(f"  ✗ Part {i + 1} 失败 (尝试 {attempt}/3): {details}")
-            if attempt < 3:
-                time.sleep(attempt * 2)
+        ssml = f"""<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
+                   xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-CN">
+            <voice name="zh-CN-XiaoxiaoMultilingualNeural">
+                <mstts:express-as style="gentle">
+                    <prosody rate="{speech_rate}">{processed}</prosody>
+                </mstts:express-as>
+            </voice>
+        </speak>"""
 
-    if not success:
-        raise RuntimeError(f"Part {i + 1} synthesis failed")
+        success = False
+        for attempt in range(1, 4):
+            result = synth.speak_ssml_async(ssml).get()
+            if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+                chunk_duration = result.audio_duration.total_seconds()
+                print(f"  ✓ Part {i + 1}/{len(chunks)} done ({len(chunk)} chars, {chunk_duration:.1f}s)")
+                accumulated_duration += chunk_duration
+                success = True
+                break
+            else:
+                details = result.cancellation_details.error_details
+                print(f"  ✗ Part {i + 1} failed (attempt {attempt}/3): {details}")
+                if attempt < 3:
+                    time.sleep(attempt * 2)
 
-total_duration = accumulated_duration
+        if not success:
+            raise RuntimeError(f"Part {i + 1} synthesis failed")
+
+    return part_files, word_boundaries, accumulated_duration
+
+
+# TTS synthesis
+if BACKEND == "azure":
+    part_files, word_boundaries, total_duration = synth_azure(chunks, phoneme_dict, SPEECH_RATE, args.output_dir)
+elif BACKEND == "cosyvoice":
+    part_files, word_boundaries, total_duration = synth_cosyvoice(chunks, phoneme_dict, SPEECH_RATE, args.output_dir)
 print(f"\n✓ 收集到 {len(word_boundaries)} 个词边界")
 print(f"✓ 总时长: {total_duration:.1f} 秒")
 
