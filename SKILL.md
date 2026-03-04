@@ -484,6 +484,9 @@ npx remotion still src/remotion/index.ts Thumbnail4x3 videos/{name}/thumbnail_re
 ```bash
 cp ~/.claude/skills/video-podcast-maker/generate_tts.py .
 python3 generate_tts.py --input videos/{name}/podcast.txt --output-dir videos/{name}
+
+# Or use CosyVoice backend (requires DASHSCOPE_API_KEY)
+TTS_BACKEND=cosyvoice python3 generate_tts.py --input videos/{name}/podcast.txt --output-dir videos/{name}
 ```
 
 ### 多音字/发音校正 (SSML Phoneme)

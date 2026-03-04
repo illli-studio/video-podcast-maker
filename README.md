@@ -12,7 +12,7 @@ Automated pipeline to create professional video podcasts from a topic. **Optimiz
 
 - **Topic Research** - Web search and content gathering
 - **Script Writing** - Structured narration with section markers
-- **Azure TTS** - High-quality Chinese/English text-to-speech
+- **Multi-TTS** - Azure Speech or CosyVoice (Alibaba Cloud) text-to-speech
 - **Remotion Video** - React-based video composition with animations
 - **Visual Style Editing** - Adjust colors, fonts, and layout in Remotion Studio UI
 - **Real-time Preview** - Remotion Studio for instant debugging before render
@@ -21,7 +21,7 @@ Automated pipeline to create professional video podcasts from a topic. **Optimiz
 - **Subtitle Burning** - Optional SRT subtitle embedding
 - **4K Output** - 3840x2160 resolution for crisp uploads
 - **Chapter Progress Bar** - Visual timeline showing current section during playback
-- **Bilingual TTS** - Chinese/English mixed narration with Azure Speech
+- **Bilingual TTS** - Chinese/English mixed narration with Azure Speech or CosyVoice
 - **Pronunciation Correction** - Built-in polyphone dictionary + custom phoneme support
 - **Bilibili Templates** - Ready-to-use Remotion templates (`Video.tsx`, `Root.tsx`, `Thumbnail.tsx`, `podcast.txt`) for quick project scaffolding
 - **Component Library** - Reusable visual building blocks (ComparisonCard, Timeline, CodeBlock, QuoteBlock, FeatureGrid, DataBar) for composing rich section layouts
@@ -69,7 +69,7 @@ brew install ffmpeg node python3
 sudo apt install ffmpeg nodejs python3 python3-pip
 
 # Python dependencies
-pip install azure-cognitiveservices-speech requests
+pip install azure-cognitiveservices-speech dashscope requests
 ```
 
 ### Project Setup (Required)
@@ -104,7 +104,8 @@ npm install remotion @remotion/cli @remotion/player zod
 
 | Service | Purpose | Get Key |
 |---------|---------|---------|
-| **Azure Speech** | TTS audio generation (required) | [Azure Portal](https://portal.azure.com/) → Speech Services |
+| **Azure Speech** | TTS audio generation (default backend) | [Azure Portal](https://portal.azure.com/) → Speech Services |
+| **Aliyun CosyVoice** | TTS audio generation (alternative backend) | [Aliyun Bailian](https://bailian.console.aliyun.com/) |
 | **Google Gemini** | AI thumbnail generation (optional) | [AI Studio](https://aistudio.google.com/) |
 | **Aliyun Dashscope** | AI thumbnail - Chinese optimized (optional) | [Aliyun Bailian](https://bailian.console.aliyun.com/) |
 
@@ -113,15 +114,14 @@ npm install remotion @remotion/cli @remotion/player zod
 Add to `~/.zshrc` or `~/.bashrc`:
 
 ```bash
-# Azure TTS (required)
-export AZURE_SPEECH_KEY="your-azure-speech-key"
+# TTS Backend: Azure (default) or CosyVoice
+export AZURE_SPEECH_KEY="your-azure-speech-key"     # Required for Azure TTS
 export AZURE_SPEECH_REGION="eastasia"
+export DASHSCOPE_API_KEY="your-dashscope-api-key"    # Required for CosyVoice TTS + AI thumbnails
+export TTS_BACKEND="azure"                           # Or "cosyvoice"
 
 # Optional: Google Gemini for AI thumbnails
 export GEMINI_API_KEY="your-gemini-api-key"
-
-# Optional: Aliyun for AI thumbnails (Chinese optimized)
-export DASHSCOPE_API_KEY="your-dashscope-api-key"
 ```
 
 Then reload: `source ~/.zshrc`
@@ -209,7 +209,8 @@ Included tracks in `assets/`:
 - [ ] Figma integration for thumbnails, icons, and layout design assets
 - [x] Remotion transitions (@remotion/transitions) for professional chapter transitions
 - [x] Component template library (ComparisonCard, Timeline, CodeBlock, QuoteBlock, FeatureGrid, DataBar)
-- [ ] Multi TTS engine support (ElevenLabs, Edge TTS) as alternatives to Azure Speech
+- [x] Multi TTS engine support (Azure Speech + CosyVoice via `TTS_BACKEND` env var)
+- [ ] Additional TTS engines (ElevenLabs, Edge TTS)
 - [ ] Windows compatibility (WSL or native PowerShell support)
 
 ## License
