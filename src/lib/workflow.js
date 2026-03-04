@@ -1,10 +1,11 @@
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import https from 'https';
 
 /**
- * Video Podcast Maker - Workflow Module
- * Handles topic research and script generation with MiniMax LLM
+ * Video Podcast Maker - Research Module
+ * Handles topic research using MiniMax LLM
  */
 
 const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY || 'sk-cp-d5pjw60trdBAP0_6f8u-bCvOW7zN_1F4lDjEv8N3BjAeBMEyJPaK-2sJaEfd1rFgaOPnwQ3HM2cDrUFwH3C7AB2Cvofq-AGpTGVCaZdZ_psHwqkHBaf59RQ';
@@ -42,6 +43,8 @@ async function callMiniMax(prompt, systemPrompt = 'You are a helpful assistant.'
           const json = JSON.parse(body);
           if (json.choices && json.choices[0]) {
             resolve(json.choices[0].message.content);
+          } else if (json.error) {
+            reject(new Error(json.error.message || 'API Error'));
           } else {
             reject(new Error('Invalid API response'));
           }
@@ -78,7 +81,9 @@ Format as JSON with keys: summary, keyPoints (array), sources (array)`;
     try {
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        const result = JSON.parse(jsonMatch[0]);
+        console.log(`✅ Research complete: ${result.keyPoints?.length || 0} key points`);
+        return result;
       }
     } catch (e) {
       // Fall back to structured response
@@ -130,7 +135,7 @@ Create a video script with these sections:
 For each section provide:
 - id: unique identifier (kebab-case)
 - title: section title
-- content: narration text ( conversational, suitable for TTS)
+- content: narration text (conversational, suitable for TTS)
 - duration: estimated seconds
 
 Return as JSON array with objects containing: id, title, content, duration
@@ -144,6 +149,8 @@ Total duration should be around 60-90 seconds.`;
       if (jsonMatch) {
         const sections = JSON.parse(jsonMatch[0]);
         const totalDuration = sections.reduce((sum, s) => sum + (s.duration || 20), 0);
+        
+        console.log(`✅ Script generated: ${sections.length} sections, ${totalDuration}s`);
         
         return {
           title: topic,
@@ -250,4 +257,45 @@ export function validateScript(script) {
     valid: errors.length === 0,
     errors
   };
+}
+
+/**
+ * Load config from file or environment
+ */
+export function loadConfig() {
+  const configPath = path.join(process.env.HOME || '', '.video-podcast-maker.json');
+  
+  let config = {
+    azureSpeechKey: process.env.AZURE_SPEECH_KEY,
+    azureSpeechRegion: process.env.AZURE_SPEECH_REGION || 'eastus',
+    cosyVoiceKey: process.env.COSYVOICE_KEY,
+    minimaxApiKey: process.env.MINIMAX_API_KEY
+  };
+  
+  // Try to load from file
+  if (fs.existsSync(configPath)) {
+    try {
+      const fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      config = { ...config, ...fileConfig };
+    } catch (e) {
+      console.warn('Failed to load config file');
+    }
+  }
+  
+  return config;
+}
+
+/**
+ * Save config to file
+ */
+export function saveConfig(config) {
+  const configPath = path.join(process.env.HOME || '', '.video-podcast-maker.json');
+  
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    return true;
+  } catch (e) {
+    console.error('Failed to save config:', e.message);
+    return false;
+  }
 }
