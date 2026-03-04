@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """
-Azure TTS Script for Video Podcast Maker
+TTS Script for Video Podcast Maker (Azure + CosyVoice)
 Generates audio from podcast.txt and creates SRT subtitles + timing.json for Remotion sync
 """
 import os
 import sys
 import json
 import argparse
-import azure.cognitiveservices.speech as speechsdk
 import subprocess
 import re
 import time
@@ -158,14 +157,26 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--input', '-i', default='podcast.txt', help='Input script file (default: podcast.txt)')
 parser.add_argument('--output-dir', '-o', default='.', help='Output directory for podcast_audio.wav, podcast_audio.srt, timing.json (default: current dir)')
 parser.add_argument('--phonemes', '-p', default=None, help='Phoneme dictionary JSON file (default: phonemes.json in input dir)')
+parser.add_argument('--backend', '-b', default=None,
+    help='TTS backend: azure or cosyvoice (default: env TTS_BACKEND or azure)')
 
 args = parser.parse_args()
 
-key = os.environ.get("AZURE_SPEECH_KEY")
-region = os.environ.get("AZURE_SPEECH_REGION", "eastasia")
-if not key:
-    print("Error: AZURE_SPEECH_KEY not set", file=sys.stderr)
-    print("Add to ~/.zshrc: export AZURE_SPEECH_KEY='your-key'", file=sys.stderr)
+BACKEND = args.backend or os.environ.get("TTS_BACKEND", "azure")
+print(f"TTS backend: {BACKEND}")
+
+if BACKEND == "azure":
+    key = os.environ.get("AZURE_SPEECH_KEY")
+    region = os.environ.get("AZURE_SPEECH_REGION", "eastasia")
+    if not key:
+        print("Error: AZURE_SPEECH_KEY not set", file=sys.stderr)
+        sys.exit(1)
+elif BACKEND == "cosyvoice":
+    if not os.environ.get("DASHSCOPE_API_KEY"):
+        print("Error: DASHSCOPE_API_KEY not set", file=sys.stderr)
+        sys.exit(1)
+else:
+    print(f"Error: Unknown backend '{BACKEND}'. Use 'azure' or 'cosyvoice'", file=sys.stderr)
     sys.exit(1)
 MAX_CHARS = 400
 
